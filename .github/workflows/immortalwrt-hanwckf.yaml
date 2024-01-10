@@ -2,6 +2,7 @@
 name: 基于hanwckf的immortalwrt编译固件
 
 on:
+  repository_dispatch:
   workflow_dispatch:
 
 env:
@@ -9,6 +10,7 @@ env:
   MY_WORKSPACE: /home/runner
   REPOSITORY_URL: https://github.com/hanwckf/immortalwrt-mt798x
   REPOSITORY_DIR: /home/runner/immortalwrt
+  FIRMWARE_DIR: /home/runner/immortalwrt/bin/targets/mediatek/mt7981
 
 jobs:
   build:
@@ -45,21 +47,37 @@ jobs:
           make defconfig
 
       - name: 下载依赖
+        id: download
         run: |
           cd $REPOSITORY_DIR
-          make download -j$(nproc)
+          make download -j$(nproc) V=10
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: 编译固件
+        id: compile
+        if: !cancelled() && steps.download.outputs.status == 'success'
         run: |
           cd $REPOSITORY_DIR
           make -j$(nproc) V=s
-
+          cd $FIRMWARE_DIR
+          rm -rf packages
+          echo "status=success" >> $GITHUB_OUTPUT
+          
+      - name: 创建GitHub Release Tag
+        id: release_tag
+        if: !cancelled() && steps.compile.outputs.status == 'success'
+        run: |
+          cd $FIRMWARE_DIR
+          echo "file_date=$(date +"%Y_%m_%d")" >> $GITHUB_OUTPUT
+          echo "file_version=$(cat version.buildinfo)" >> $GITHUB_OUTPUT
+          
       - name: 上传固件至GitHub Release
+        if: !cancelled() && steps.compile.outputs.status == 'success'
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: test001
+          tag_name: ${{ steps.release_tag.outputs.file_date }}_${{ steps.release_tag.outputs.file_version }}
           body: |
             测试编译上传
-          files: ${{ env.REPOSITORY_DIR }}/bin/targets/mediatek/mt7981/*
+          files: ${{ env.FIRMWARE_DIR }}/*
