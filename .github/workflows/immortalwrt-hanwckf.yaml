@@ -1,0 +1,65 @@
+
+name: 基于hanwckf的immortalwrt编译固件
+
+on:
+  workflow_dispatch:
+
+env:
+  TZ: Asia/Shanghai
+  MY_WORKSPACE: /home/runner
+  REPOSITORY_URL: https://github.com/hanwckf/immortalwrt-mt798x
+  REPOSITORY_DIR: /home/runner/immortalwrt
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: 初始化仓库
+        uses: actions/checkout@main
+
+      - name: 初始化编译环境
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          cd $MY_WORKSPACE
+          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.eu.org/init_build_environment.sh)'
+
+      - name: 拉取源码
+        run:
+          git clone --depth=1 $REPOSITORY_URL $REPOSITORY_DIR
+
+      - name: 更新feeds
+        run: |
+          cd $REPOSITORY_DIR
+          ./scripts/feeds update -a
+
+      - name: 安装feeds
+        run: |
+          cd $REPOSITORY_DIR
+          ./scripts/feeds install -a
+
+      - name: 加载defconfig设置
+        run: |
+          cd $REPOSITORY_DIR
+          cp -f defconfig/mt7981-ax3000.config .config
+          make defconfig
+
+      - name: 下载依赖
+        run: |
+          cd $REPOSITORY_DIR
+          make download -j$(nproc)
+
+      - name: 编译固件
+        run: |
+          cd $REPOSITORY_DIR
+          make -j$(nproc) V=s
+
+      - name: 上传固件至GitHub Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: test001
+          body: |
+            测试编译上传
+          files: ${{ env.REPOSITORY_DIR }}/bin/targets/mediatek/mt7981/*
