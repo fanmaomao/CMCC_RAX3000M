@@ -31,6 +31,7 @@ jobs:
         id: clone_repository
         run: |
           git clone --depth=1 $REPOSITORY_URL $REPOSITORY_DIR
+          cd $REPOSITORY_DIR
           echo "REPOSITORY_CID=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: 更新feeds
@@ -46,7 +47,7 @@ jobs:
       - name: 加载defconfig设置
         run: |
           cd $REPOSITORY_DIR
-          cp -f defconfig/mt7981-ax3000.config .config
+          cp -f $GITHUB_WORKSPACE/config/immortalwrt-hanwckf.config .config
           make defconfig
 
       - name: 下载依赖
