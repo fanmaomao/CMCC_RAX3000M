@@ -9,14 +9,15 @@ env:
   TZ: Asia/Shanghai
   MY_WORKSPACE: /home/runner
   REPOSITORY_URL: https://github.com/hanwckf/immortalwrt-mt798x
+  REPOSITORY_CID: 
   REPOSITORY_DIR: /home/runner/immortalwrt
   FIRMWARE_DIR: /home/runner/immortalwrt/bin/targets/mediatek/mt7981
 
 jobs:
-  build:
+  CompileFirmware:
     runs-on: ubuntu-20.04
     steps:
-      - name: 初始化仓库
+      - name: 初始化本项目仓库
         uses: actions/checkout@main
 
       - name: 初始化编译环境
@@ -27,8 +28,10 @@ jobs:
           sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.eu.org/init_build_environment.sh)'
 
       - name: 拉取源码
-        run:
+        id: clone_repository
+        run: |
           git clone --depth=1 $REPOSITORY_URL $REPOSITORY_DIR
+          echo "REPOSITORY_CID=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: 更新feeds
         run: |
@@ -62,7 +65,7 @@ jobs:
           cd $FIRMWARE_DIR
           rm -rf packages
           echo "status=success" >> $GITHUB_OUTPUT
-          echo "file_date=$(date +"%Y_%m_%d")" >> $GITHUB_OUTPUT
+          echo "file_date=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
           echo "file_version=$(cat version.buildinfo)" >> $GITHUB_OUTPUT
           
       - name: 上传固件至GitHub Release
@@ -71,8 +74,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ steps.compile.outputs.file_date }} 适用于cmcc_rax3000m_nand版本的immortalwrt固件
-          tag_name: ${{ steps.compile.outputs.file_date }}_${{ steps.compile.outputs.file_version }}
+          name: '[${{ steps.compile.outputs.file_date }}]适用于cmcc_rax3000m_nand版本的immortalwrt固件'
+          tag_name: ${{ steps.compile.outputs.file_date }}-${{ steps.compile.outputs.file_version }}
           body: |
-            编译自${{ env.REPOSITORY_URL }}
+            基于 ${{ env.REPOSITORY_URL }} 编译
+            commit_id: ${{ env.REPOSITORY_CID }}
           files: ${{ env.FIRMWARE_DIR }}/*
