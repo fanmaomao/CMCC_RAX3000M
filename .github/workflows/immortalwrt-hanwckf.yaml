@@ -55,29 +55,24 @@ jobs:
 
       - name: 编译固件
         id: compile
-        if: !cancelled() && steps.download.outputs.status == 'success'
+        if: ${{ !cancelled() && steps.download.outputs.status == 'success' }}
         run: |
           cd $REPOSITORY_DIR
           make -j$(nproc) V=s
           cd $FIRMWARE_DIR
           rm -rf packages
           echo "status=success" >> $GITHUB_OUTPUT
-          
-      - name: 创建GitHub Release Tag
-        id: release_tag
-        if: !cancelled() && steps.compile.outputs.status == 'success'
-        run: |
-          cd $FIRMWARE_DIR
           echo "file_date=$(date +"%Y_%m_%d")" >> $GITHUB_OUTPUT
           echo "file_version=$(cat version.buildinfo)" >> $GITHUB_OUTPUT
           
       - name: 上传固件至GitHub Release
-        if: !cancelled() && steps.compile.outputs.status == 'success'
+        if: ${{ !cancelled() && steps.compile.outputs.status == 'success' }}
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.release_tag.outputs.file_date }}_${{ steps.release_tag.outputs.file_version }}
+          name: ${{ steps.compile.outputs.file_date }} 适用于cmcc_rax3000m_nand版本的immortalwrt固件
+          tag_name: ${{ steps.compile.outputs.file_date }}_${{ steps.compile.outputs.file_version }}
           body: |
-            测试编译上传
+            编译自${{ env.REPOSITORY_URL }}
           files: ${{ env.FIRMWARE_DIR }}/*
