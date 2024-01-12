@@ -1,7 +1,7 @@
 # CMCC_RAX3000M
 RAX3000M是中国移动于2023年推出的一款高性价比路由器。
 
-不仅美观(https://www.red-dot.org/project/rax3000m-wifi6-65030)，
+不仅美观( https://www.red-dot.org/project/rax3000m-wifi6-65030 )，
 硬件配置更是家用百元级产品中的佼佼者：
 ```text
 SoC: MediaTek Filogic 820 MT7981B 双核1.3GHz
@@ -16,22 +16,30 @@ WiFi: WiFi6-AX3000M规格
 
 ## 刷机
 ### 开启SSH
-参考自：
-- https://www.right.com.cn/forum/thread-8320480-1-1.html
-- https://www.right.com.cn/forum/thread-8316001-1-1.html
-
 ```bash
-export CMCC_PASSWD=$CmDc#RaX30O0M@\!$
-# 解包
-openssl aes-256-cbc -d -pbkdf2 -k $CMCC_PASSWD -in cfg_export_config_file.conf -out temp.tar.gz
+# 1. 先在网页上登录到路由器管理后台，导出配置文件
 
-tar -xzf temp.tar.gz
+# 2. 从系统日志中发现暴露了密钥
+export CMCC_PASSWD='$CmDc#RaX30O0M@!$'
 
-# 重新压包
-tar -zcf - etc/ | openssl aes-256-cbc -pbkdf2 -k $CMCC_PASSWD -out export_config_new.conf
+# 3. 在本地对配置文件解密解压
+openssl aes-256-cbc -d -pbkdf2 -k $CMCC_PASSWD -in cfg_export_config_file.conf -out - | tar -zxvf -
+
+# 4. 编辑 etc/config/dropbear 文件以开启SSH
+# 编辑 etc/shadow 文件以置空root密码
+
+# 5. 重新压包加密
+tar -zcvf - etc | openssl aes-256-cbc -pbkdf2 -k $CMCC_PASSWD -out new_config.conf
+
+# 6. 登录到路由器管理后台，导入新的配置文件
 ```
+参考自：
+- https://www.right.com.cn/forum/thread-8302668-1-1.html
+- https://www.right.com.cn/forum/thread-8316001-1-1.html
+- https://www.right.com.cn/forum/thread-8320480-1-1.html
 
 ### 备份原厂固件
+如果你的是nand版的，由于flash较小，在备份时最好打包一个就导出一个到本地。
 ```bash
 dd if=/dev/mtd0 | gzip >/tmp/mtd0_spi0.0.bin.gz
 dd if=/dev/mtd1 of=/tmp/mtd1_BL2.bin
@@ -43,12 +51,16 @@ dd if=/dev/mtd6 of=/tmp/mtd6_plugins.bin
 dd if=/dev/mtd7 of=/tmp/mtd7_fwk.bin
 dd if=/dev/mtd8 of=/tmp/mtd8_fwk2.bin
 ```
+
 ### 刷入uBoot
+这里推荐使用hanwckf制作的bootloader。
+- https://github.com/hanwckf/bl-mt798x
+- https://github.com/hanwckf/bl-mt798x/releases/tag/20231124
 ```bash
+# 1. ssh登录到路由器操作系统
+# 2. 上传适用于cmcc_rax3000m的文件到/tmp目录下
+# 3. 使用mtd命令写入
 mtd write /tmp/mt7981_cmcc_rax3000m-fip-fixed-parts.bin FIP
 ```
 
 ### 刷入OpenWRT
-
-
-
