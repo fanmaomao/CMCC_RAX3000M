@@ -40,6 +40,7 @@ jobs:
           SOC=mt7981 BOARD=cmcc_rax3000m ./build.sh
           cd output
           sha256sum * >> sha256sum.txt
+          cat sha256sum.txt
           echo "status=success" >> $GITHUB_OUTPUT
           echo "file_date1=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
           echo "file_date2=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_OUTPUT

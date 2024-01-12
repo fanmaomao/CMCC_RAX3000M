@@ -1,5 +1,5 @@
 
-name: 基于hanwckf的immortalwrt编译固件
+name: 编译hanwckf的immortalwrt固件
 
 on:
   repository_dispatch:
@@ -75,8 +75,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: '[${{ steps.compile.outputs.file_date }}]适用于cmcc_rax3000m_nand版本的immortalwrt固件'
-          tag_name: ${{ steps.compile.outputs.file_date }}-${{ steps.compile.outputs.file_version }}
+          name: '[firmware][${{ steps.compile.outputs.file_date }}]适用于cmcc_rax3000m_nand版本的immortalwrt固件'
+          tag_name: firmware-${{ steps.compile.outputs.file_date }}-${{ steps.compile.outputs.file_version }}
           body: |
             基于 ${{ env.REPOSITORY_URL }} 编译
             commit_id: ${{ env.REPOSITORY_CID }}
