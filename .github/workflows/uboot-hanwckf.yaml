@@ -1,0 +1,58 @@
+
+name: 编译hanwckf的bootloader
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+env:
+  MY_WORKSPACE: /home/runner
+  REPOSITORY_URL: https://github.com/hanwckf/bl-mt798x
+  REPOSITORY_CID: 
+  REPOSITORY_DIR: /home/runner/bootloader-mt798x
+
+jobs:
+  CompileBootloader:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: 初始化本项目仓库
+        uses: actions/checkout@main
+
+      - name: 初始化编译环境
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          cd $MY_WORKSPACE
+          sudo apt update
+          sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev
+
+      - name: 拉取源码
+        id: clone_repository
+        run: |
+          git clone --depth=1 $REPOSITORY_URL $REPOSITORY_DIR
+          cd $REPOSITORY_DIR
+          echo "REPOSITORY_CID=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: 编译
+        id: compile
+        run: |
+          cd $REPOSITORY_DIR
+          SOC=mt7981 BOARD=cmcc_rax3000m ./build.sh
+          cd output
+          sha256sum * >> sha256sum.txt
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "file_date1=$(date +"%Y%m%d")" >> $GITHUB_OUTPUT
+          echo "file_date2=$(date +"%Y%m%d_%H%M%S")" >> $GITHUB_OUTPUT
+          
+      - name: 上传文件至GitHub Release
+        if: ${{ !cancelled() && steps.compile.outputs.status == 'success' }}
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: '[uBoot][${{ steps.compile.outputs.file_date1 }}]适用于cmcc_rax3000m_nand版本的uboot'
+          tag_name: uboot-${{ steps.compile.outputs.file_date2 }}
+          body: |
+            基于 ${{ env.REPOSITORY_URL }} 编译
+            commit_id: ${{ env.REPOSITORY_CID }}
+          files: ${{ env.REPOSITORY_DIR }}/output/*
