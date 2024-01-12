@@ -62,5 +62,15 @@ dd if=/dev/mtd8 of=/tmp/mtd8_fwk2.bin
 # 3. 使用mtd命令写入
 mtd write /tmp/mt7981_cmcc_rax3000m-fip-fixed-parts.bin FIP
 ```
+也可以自行编译，可参考本项目的`.github/workflows`。
+
+### 获取固件
+这款路由器对市面上主流的OpenWRT系统都兼容良好。
+推荐根据自身需求自行编译系统固件。
+
+编译过程可参考本项目的`.github/workflows`。
 
 ### 刷入OpenWRT
+刷入uboot后，可以轻松的借助其web页面刷入系统固件。
+详见：
+[hanwckf's blog](https://cmi.hanwckf.top/p/mt798x-uboot-usage/#failsafe-webui%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)
