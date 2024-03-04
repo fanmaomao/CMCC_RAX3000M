@@ -24,6 +24,27 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          echo "==========================================================="
+          echo "磁盘占用情况："
+          df -hT
+          echo "==========================================================="
+          sudo rm -rf /etc/apt/sources.list.d/*
+          echo "✅删除apt缓存"
+          sudo rm -rf /usr/share/dotnet
+          echo "✅删除.net环境"
+          sudo rm -rf /usr/local/lib/android
+          echo "✅删除android库"
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          echo "✅删除haskell"
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          echo "✅删除CodeQL"
+          sudo docker image prune --all --force
+          echo "✅清理docker镜像"
+          echo "==========================================================="
+          echo "磁盘占用情况："
+          df -hT 
+          echo "==========================================================="
           cd $MY_WORKSPACE
           sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.eu.org/init_build_environment.sh)'
 
