@@ -39,7 +39,7 @@ jobs:
           echo "✅删除haskell"
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           echo "✅删除CodeQL"
-          sudo docker image prune --all --force
+          sudo docker image prune --all --force > /dev/null
           echo "✅清理docker镜像"
           echo "==========================================================="
           echo "磁盘占用情况："
