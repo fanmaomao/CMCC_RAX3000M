@@ -90,3 +90,27 @@ mtd write /tmp/mt7981_cmcc_rax3000m-fip-fixed-parts.bin FIP
 刷入uboot后，可以轻松的借助其web页面(192.168.1.1)刷入系统固件。
 详见：
 [hanwckf's blog](https://cmi.hanwckf.top/p/mt798x-uboot-usage/#failsafe-webui%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E)
+
+## 扩容
+一个坏消息，这款路由器NAND版本安装完固件后只剩80+M的可用空间了，着实不够用。
+
+一个好消息，这款路由器它还有一个USB3.0插口。于是可以使用U盘来扩容可用空间！
+
+### 扩容Overlay
+SquashFS的固件将底层存储硬件在逻辑上划分出只读和读写两层，只读层用于保存操作系统的内核和系统固件文件，读写层用于保存系统运行时变更和用户变更。这种机制方便快速的恢复出厂设置。
+
+Overlay便是那个读写层。用户下载和安装软件也就存储于Overlay中。
+
+NAND版本只有128M的物理存储空间，不必在这里面再折腾了，固件本身已经尽力腾出所有可用空间了。外挂U盘就是新大陆。
+
+严格来讲`扩容Overlay`不是在其本身增加容量，而是把Overlay移动到一个更大的空间里。
+
+一个U盘的空间不建议全部用于Overlay，可以通过分区来合理安排。
+
+> 推荐观看：https://www.youtube.com/watch?v=YwbwzuXKNlg
+
+
+#### 使用`cfdisk`给U盘分区
+
+
+#### 使用`fdisk`给U盘分区
